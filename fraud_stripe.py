@@ -2,7 +2,7 @@
 import stripe
 stripe.api_key = "STRIPE KEY HERE"
 
-#Lists for caveman recursive searching
+#Lists for searching
 spacelist=[]
 checkedSpaces=[]
 checkedPrints=[]
