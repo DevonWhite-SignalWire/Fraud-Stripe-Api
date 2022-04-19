@@ -1,14 +1,18 @@
+import pandas as pd
+
 #setup stripe
 import stripe
-stripe.api_key = "STRIPE KEY HERE"
+stripe.api_key = "TOKEN HERE"
+stripe.api_version = "2020-08-27"
 
-#Lists for searching
+#Lists for caveman recursive searching
 spacelist=[]
 checkedSpaces=[]
 checkedPrints=[]
 fingerprintlist=[]
 finaldict={}
 
+d = []
 
 def initsearch():
     # Takes a cc fingerprint via input
@@ -18,8 +22,8 @@ def initsearch():
     firstList = stripe.Charge.search(query=initquery)
     #paginate the Stripe object returned from query and append every SPACE associated with the FINGERPRINT provided
     for space in firstList.auto_paging_iter():
-        if space.metadata.Space not in spacelist:
-            spacelist.append(space.metadata.Space)
+        if space.metadata.space_id not in spacelist:
+            spacelist.append(space.metadata.space_id)
     #Call next function and pass a list of spaces
     fPrintRetriever(spacelist)
 
@@ -28,10 +32,11 @@ def fPrintRetriever(Spaces):
     for space in Spaces:
         # Ensure the space has not been checked, then add it to our CHECKED spaces list
         if space not in checkedSpaces:
+            print('checking: ',space)
             checkedSpaces.append(space)
 
             # Build a new querystring that searches for the SPACE by metadata
-            query = "metadata['Space']:'" + space + "'"
+            query = "metadata['space_id']:'" + space + "'"
             printsRetrieved = stripe.Charge.search(query=str(query))
 
             # add the space to our final dictionary and build an empty list
@@ -67,8 +72,8 @@ def spaceRetriever(fPrintList):
             for space in spacesRetrieved.auto_paging_iter():
 
                 # IF the space metadata is not in our SPACE list, add it
-                if space.metadata.Space not in spacelist:
-                    spacelist.append(space.metadata.Space)
+                if space.metadata.space_id not in spacelist:
+                    spacelist.append(space.metadata.space_id)
 
     #IF our space list is longer than our CHECKED spaces list, we have more searches to make
     if len(spacelist)>len(checkedSpaces):
@@ -76,4 +81,10 @@ def spaceRetriever(fPrintList):
 
 # Starts our initial search and prints the final dictionary when we exhaust all SPACES and FINGERPRINTS associated with the origin FINGERPRINT
 initsearch()
-print(finaldict)
+for space in finaldict:
+    d.append(("https://internal.signalwire.com/spaces/"+space, finaldict[space]))
+    print("https://internal.signalwire.com/spaces/" + space, finaldict[space])
+
+
+df = pd.DataFrame(d, columns=('Space', 'fingerprint'))
+df.to_csv('fingerprints.csv', index=False, encoding='utf-8')
