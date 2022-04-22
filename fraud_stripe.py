@@ -88,3 +88,4 @@ for space in finaldict:
 
 df = pd.DataFrame(d, columns=('Space', 'fingerprint'))
 df.to_csv('fingerprints.csv', index=False, encoding='utf-8')
+
